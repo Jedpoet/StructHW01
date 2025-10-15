@@ -7,6 +7,7 @@ class static_array {
 	static_array();
 	void insert(long long id, int score);
 	std::vector<int> search(long long id);
+	long long sum();
 
   private:
 	long long start;

@@ -36,3 +36,16 @@ std::vector<int> static_array::search(long long id) {
 		return a[id].scores;
 	}
 }
+
+long long static_array::sum() {
+	long long pin = start;
+	long long total = 0;
+	while ( pin != -1 ) {
+		for ( auto i = a[pin].scores.begin(); i != a[pin].scores.end(); i++ ) {
+			total += *i;
+		}
+		pin = a[pin].next_id;
+	}
+
+	return total;
+}
