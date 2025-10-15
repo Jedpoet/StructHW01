@@ -1,5 +1,7 @@
 #include <vector>
 
+const size_t ARRAY_SIZE = 1ULL << 20;
+
 class static_array {
   public:
 	static_array();
@@ -7,11 +9,10 @@ class static_array {
 	std::vector<int> search(long long id);
 
   private:
+	long long start;
 	struct Node {
-		long long id;
 		std::vector<int> scores;
-		long long next_id;
+		long long next_id = -1;
 	};
-	std::vector<Node> a(33554432);
-	void exension();
+	std::vector<Node> a{ARRAY_SIZE};
 };
