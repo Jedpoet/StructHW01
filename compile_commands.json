@@ -1,0 +1,26 @@
+[
+{
+  "directory": "C:/0Jade/CPPs/struct/hw01/build",
+  "command": "C:\\mingw64\\bin\\c++.exe -IC:/0Jade/CPPs/struct/hw01/include -std=gnu++20 -o CMakeFiles\\StructHW01.dir\\src\\d_array.cpp.obj -c C:\\0Jade\\CPPs\\struct\\hw01\\src\\d_array.cpp",
+  "file": "C:\\0Jade\\CPPs\\struct\\hw01\\src\\d_array.cpp",
+  "output": "CMakeFiles\\StructHW01.dir\\src\\d_array.cpp.obj"
+},
+{
+  "directory": "C:/0Jade/CPPs/struct/hw01/build",
+  "command": "C:\\mingw64\\bin\\c++.exe -IC:/0Jade/CPPs/struct/hw01/include -std=gnu++20 -o CMakeFiles\\StructHW01.dir\\src\\llpp.cpp.obj -c C:\\0Jade\\CPPs\\struct\\hw01\\src\\llpp.cpp",
+  "file": "C:\\0Jade\\CPPs\\struct\\hw01\\src\\llpp.cpp",
+  "output": "CMakeFiles\\StructHW01.dir\\src\\llpp.cpp.obj"
+},
+{
+  "directory": "C:/0Jade/CPPs/struct/hw01/build",
+  "command": "C:\\mingw64\\bin\\c++.exe -IC:/0Jade/CPPs/struct/hw01/include -std=gnu++20 -o CMakeFiles\\StructHW01.dir\\src\\main.cpp.obj -c C:\\0Jade\\CPPs\\struct\\hw01\\src\\main.cpp",
+  "file": "C:\\0Jade\\CPPs\\struct\\hw01\\src\\main.cpp",
+  "output": "CMakeFiles\\StructHW01.dir\\src\\main.cpp.obj"
+},
+{
+  "directory": "C:/0Jade/CPPs/struct/hw01/build",
+  "command": "C:\\mingw64\\bin\\c++.exe -IC:/0Jade/CPPs/struct/hw01/include -std=gnu++20 -o CMakeFiles\\StructHW01.dir\\src\\s_array.cpp.obj -c C:\\0Jade\\CPPs\\struct\\hw01\\src\\s_array.cpp",
+  "file": "C:\\0Jade\\CPPs\\struct\\hw01\\src\\s_array.cpp",
+  "output": "CMakeFiles\\StructHW01.dir\\src\\s_array.cpp.obj"
+}
+]
