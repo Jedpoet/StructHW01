@@ -5,13 +5,19 @@ static_array::static_array() {
 }
 
 void static_array::insert(long long id, int score) {
-	a[id].scores.push_back(score);
-	if ( a[id].scores.size() > 0 ) {
-		// ID 已經存在並被串入鏈結，只新增成績，然後返回。
+	// If scores are not empty, it means the node is already in the linked list.
+	// Just add the score and return.
+	if ( !a[id].scores.empty() ) {
+		a[id].scores.push_back(score);
 		return;
 	}
+
+	// If we are here, it's a new ID.
+	// Add the score first.
+	a[id].scores.push_back(score);
+
 	// 如果ID是最小的或目前還沒有值
-	if ( id < start || start == -1 ) {
+	if ( start == -1 || id < start ) {
 		a[id].next_id = start;
 		start = id;
 	}
@@ -19,7 +25,7 @@ void static_array::insert(long long id, int score) {
 		long long prv = start;
 
 		// 尋找ID位置
-		while ( a[prv].next_id < id && a[prv].next_id != -1 ) {
+		while ( a[prv].next_id != -1 && a[prv].next_id < id ) {
 			prv = a[prv].next_id;
 		}
 
