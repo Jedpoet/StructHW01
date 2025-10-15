@@ -19,5 +19,4 @@ struct linked_listpp {
   private:
 	std::set<long long> ids;
 	std::unique_ptr<nodepp> head;
-	std::unique_ptr<nodepp> tail;
 };
