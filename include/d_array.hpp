@@ -6,6 +6,7 @@ class dynamic_array {
 	dynamic_array();
 	void insert(long long id, int score);
 	std::vector<int> search(long long id);
+	long long sum();
 
   private:
 	struct Node {

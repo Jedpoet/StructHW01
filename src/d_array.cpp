@@ -65,3 +65,18 @@ void dynamic_array::exension() {
 	capacity = new_capacity;
 	a = std::move(b);
 }
+
+long long dynamic_array::sum() {
+	long long total = 0;
+	for ( auto i = (*a).begin(); i != (*a).end(); i++ ) {
+		for ( auto j = i->scores.begin(); j != i->scores.end(); j++ ) {
+			if ( *j == -1 ) {
+				continue;
+			}
+			else {
+				total += *j;
+			}
+		}
+	}
+	return total;
+}
