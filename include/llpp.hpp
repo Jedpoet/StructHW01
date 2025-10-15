@@ -15,6 +15,7 @@ struct linked_listpp {
 	linked_listpp();
 	void insert(long long id, int score);
 	std::vector<int> search(long long id);
+	long long sum();
 
   private:
 	std::set<long long> ids;

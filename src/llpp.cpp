@@ -72,3 +72,17 @@ std::vector<int> linked_listpp::search(long long id) {
 		return {-1};
 	}
 }
+
+long long linked_listpp::sum() {
+	nodepp *pin = head.get();
+	long long total = 0;
+
+	while ( pin != nullptr ) {
+		for ( auto i = pin->scores.begin(); i != pin->scores.end(); i++ ) {
+			total += *i;
+		}
+		pin = pin->next.get();
+	}
+
+	return total;
+}
