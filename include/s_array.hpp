@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <vector>
 
 const size_t ARRAY_SIZE = 1ULL << 20;
