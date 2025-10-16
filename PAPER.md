@@ -238,11 +238,22 @@ std::vector<int> linked_listpp::search(long long id) {
 
 ### 4.2 實驗圖表
 
-![圖四：執行 n 次 Insert 操作所需時間](./dense_insert_performance.png)
-![圖五：執行十萬次 Search 操作所需時間](./dense_search_performance.png)
-![圖六：計算所有 Score 總和所需時間](./dense_sum_performance.png)
+#### Insert 操作效能圖
 
-### 4.2 實驗結果與分析
+![Insert Performance](./dense_insert_performance.png)
+*圖四：執行 n 次 Insert 操作所需時間* 
+
+#### Search 操作效能圖
+
+![Search Performance](./dense_search_performance.png)
+*圖五：執行十萬次 Search 操作所需時間*
+
+#### Sum 操作效能圖
+
+![Sum Performance](./dense_sum_performance.png)
+*圖六：計算所有 Score 總和所需時間*
+
+### 4.3 實驗結果與分析
 
 - **`d_array` (預期變化最大):**
     - **分析：** 在密集且連續的 ID 分布下，新的 ID 通常會大於所有已存在的 ID，因此 `insert` 操作大多是在陣列的**末端**進行，無需移動大量元素。這使得單次 `insert` 的成本從 O(n) 降至攤銷後的 O(1)。因此，總體 `insert` 效能預期會從 O(n²) **大幅優化至接近 O(n)**。
