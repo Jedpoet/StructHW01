@@ -1,3 +1,274 @@
+# 資料結構作業報告
+
+**作者：** 童玉丞
+
+**學號：** 113703052
+
+---
+
+## 1. 效能分析圖表
+
+本章節呈現 `Insert`, `Search`, `Sum` 三種操作在不同資料規模 `n` 下的效能表現折線圖。所有圖表的 X 軸為資料規模 `n` (2^k)，Y 軸為執行時間（秒），且兩軸均採用對數尺度 (Log Scale) 以便觀察不同複雜度的增長趨勢。
+
+### 1.1 Insert 操作效能圖
+
+![Insert Performance](uniform_insert_performance.png)
+*圖一：執行 n 次 Insert 操作所需時間* 
+
+### 1.2 Search 操作效能圖
+
+![Search Performance](uniform_search_performance.png)
+*圖二：執行十萬次 Search 操作所需時間*
+
+### 1.3 Sum 操作效能圖
+
+![Sum Performance](uniform_sum_performance.png)
+*圖三：計算所有 Score 總和所需時間*
+
+---
+
+## 2. Insert 與 Search 核心程式碼
+
+### 2.1 Solution 1: `d_array` (動態陣列)
+
+#### Insert 程式碼
+
+```cpp
+void dynamic_array::insert(long long id, int score) {
+    long long low = 0, high = count - 1;
+
+    // 1. 二分搜尋檢查 ID 是否已存在
+    while ( low <= high ) {
+        long long mid = low + (high - low) / 2;
+        if ( (*a)[mid].id == id ) {
+            (*a)[mid].scores.push_back(score);
+            return;
+        }
+        if ( (*a)[mid].id < id ) {
+            low = mid + 1;
+        }
+        else {
+            high = mid - 1;
+        }
+    }
+    long long target_idx = low;
+
+    // 2. 若容量不足，擴展陣列
+    if ( count == capacity ) {
+        exension();
+    }
+
+    // 3. 移動元素，騰出插入位置
+    for ( long long i = count; i > target_idx; --i ) {
+        (*a)[i] = std::move((*a)[i - 1]);
+    }
+
+    // 4. 插入新節點
+    (*a)[target_idx] = {id, std::vector<int>{score}};
+    count++;
+}
+```
+
+**程式碼解釋：** `insert` 函式首先使用二分搜尋 (O(log n)) 來判斷 ID 是否存在。若存在，則直接新增分數。若不存在，則在確定插入點 `target_idx` 後，檢查陣列容量。最關鍵的效能瓶頸在於 `for` 迴圈，它需要將 `target_idx`之後的所有元素向後移動一位，此操作的時間複雜度為 O(n)。
+
+#### Search 程式碼
+
+```cpp
+std::vector<int> dynamic_array::search(long long id) {
+    long long low = 0, high = count - 1;
+    while ( low <= high ) {
+        long long mid = low + (high - low) / 2;
+        if ( (*a)[mid].id == id ) {
+            return (*a)[mid].scores;
+        }
+        if ( (*a)[mid].id < id ) {
+            low = mid + 1;
+        }
+        else {
+            high = mid - 1;
+        }
+    }
+    return std::vector<int>(1, -1);
+}
+```
+
+**程式碼解釋：** `search` 函式利用陣列已排序的特性，實作了一個標準的二分搜尋演算法。每次比較都能將搜尋範圍縮小一半，使其時間複雜度達到高效的 O(log n)。
+
+### 2.2 Solution 2: `s_array` (靜態陣列)
+
+#### Insert 程式碼
+
+```cpp
+void static_array::insert(long long id, int score) {
+    // 1. 若 ID 已存在，直接新增分數
+    if ( !a[id].scores.empty() ) {
+        a[id].scores.push_back(score);
+        return;
+    }
+
+    a[id].scores.push_back(score);
+
+    // 2. 將新 ID 節點插入到一個按 ID 排序的「已使用節點」鏈結串列中
+    if ( start == -1 || id < start ) {
+        a[id].next_id = start;
+        start = id;
+    }
+    else {
+        long long prv = start;
+        while ( a[prv].next_id != -1 && a[prv].next_id < id ) {
+            prv = a[prv].next_id;
+        }
+        a[id].next_id = a[prv].next_id;
+        a[prv].next_id = id;
+    }
+}
+```
+
+**程式碼解釋：** `insert` 函式利用 ID 作為索引，能以 O(1) 的時間存取節點並新增分數。然而，為了優化 `sum` 操作，程式額外維護了一個單向鏈結串列來串連所有已使用的節點。在 `while` 迴圈中，為了找到新 ID 在這個串列中的正確插入位置，需要進行遍歷，此操作的平均時間複雜度為 O(n)。
+
+#### Search 程式碼
+
+```cpp
+std::vector<int> static_array::search(long long id) {
+    if ( a[id].scores.size() == 0 ) {
+        return {-1};
+    }
+    else {
+        return a[id].scores;
+    }
+}
+```
+
+**程式碼解釋：** `search` 函式完美地利用了陣列的特性。它直接使用 `id` 作為索引 `a[id]` 來存取對應的節點，無論資料總量 `n` 有多大，此操作都只需要常數時間，時間複雜度為 O(1)。
+
+### 2.3 Solution 3: `llpp` (特殊鏈結串列)
+
+#### Insert 程式碼
+
+```cpp
+void linked_listpp::insert(long long id, int score) {
+    // 1. 若 ID 已存在，遍歷串列找到節點並新增分數
+    if ( ids.count(id) ) { 
+        nodepp *temp_ptr = head.get();
+        while ( temp_ptr != nullptr && temp_ptr->id != id ) {
+            temp_ptr = temp_ptr->next.get();
+        }
+        if ( temp_ptr != nullptr ) {
+            temp_ptr->scores.push_back(score);
+        }
+        return;
+    }
+
+    // 2. 若 ID 不存在，創建新節點
+    std::unique_ptr<nodepp> new_nodepp = std::make_unique<nodepp>();
+    // ... 初始化 new_nodepp ...
+    ids.insert(id);
+
+    // 3. 遍歷串列，找到按「記憶體位址」排序的正確插入位置
+    if ( !head || new_nodepp.get() < head.get() ) {
+        // ... 插入在頭部 ...
+    }
+    else {
+        nodepp *prev_node = head.get();
+        while ( next_node != nullptr && next_node < new_nodepp.get() ) {
+            prev_node = next_node;
+            next_node = next_node->next.get();
+        }
+        // ... 插入在中間或尾部 ...
+    }
+}
+```
+
+**程式碼解釋：** `insert` 函式邏輯較為複雜。若 ID 已存在，它需要 O(n) 地遍歷串列來找到節點。若 ID 不存在，它同樣需要 O(n) 地遍歷串列，以找到符合「記憶體位址排序」規則的插入點。因此，`insert` 的整體時間複雜度為 O(n)。
+
+#### Search 程式碼
+
+```cpp
+std::vector<int> linked_listpp::search(long long id) {
+    // 1. 使用 std::set 快速檢查 ID 是否存在
+    if ( ids.count(id) ) {
+        nodepp *temp_ptr = head.get();
+        // 2. 若存在，仍需遍歷整個串列以定位到該節點
+        while ( temp_ptr != nullptr && temp_ptr->id != id ) {
+            temp_ptr = temp_ptr->next.get();
+        }
+        return temp_ptr->scores;
+    }
+    else {
+        return {-1};
+    }
+}
+```
+
+**程式碼解釋：** `search` 函式雖然使用 `std::set` (一個 O(log n) 的操作) 來快速判斷 ID 是否存在，但這僅能用於「不存在」的場景。一旦 ID 存在，程式仍然必須從頭開始遍歷整個鏈結串列來找到對應的節點，導致其主導的時間複雜度為 O(n)。
+
+---
+
+## 3. 實驗圖表分析
+
+### 3.1 Insert 操作分析 (圖一)
+
+- **效能表現：** `d_array` 和 `llpp` 的效能曲線在對數圖上呈現斜率約為 2 的直線，顯示其時間複雜度為 **O(n²)**。`s_array` 的增長趨勢亦接近 O(n²)，但其曲線有明顯的波動。
+- **原因分析：**
+    - **`d_array` & `llpp`:** 效能瓶頸在於「保持有序」的成本。`d_array` 每次插入都需要移動 O(n) 個元素，而 `llpp` 則需要遍歷 O(n) 個節點來找到插入點。執行 n 次此類操作，總時間成本即為 O(n²)。
+    - **`s_array`:** 其 O(n²) 成本來自於維護「已使用節點」的有序鏈結串列。效能曲線之所以不平滑，是因為其記憶體存取模式是**隨機的**。在巨大的靜態陣列中跳躍式地存取節點，導致了嚴重的 **CPU 快取失誤 (Cache Miss)**，尤其在資料量 `n` 跨越不同層級快取容量的門檻時，效能會出現劇烈波動。
+
+### 3.2 Search 操作分析 (圖二)
+
+- **效能表現：** 三種結構在此展現了天壤之別。`s_array` 是一條近乎水平的線 (O(1))。`d_array` 緩慢增長 (O(log n))。`llpp` 則是一條斜率約為 1 的陡峭直線 (O(n))。
+- **原因分析：**
+    - **`s_array` (O(1)):** 以空間換時間的極致典範。利用 ID 直接作為陣列索引，實現了常數時間的查找，不受資料總量影響。
+    - **`d_array` (O(log n)):** 透過維持資料排序，得以採用高效的二分搜尋，使其效能遠勝於線性搜尋。
+    - **`llpp` (O(n)):** 鏈結串列的循序存取特性是其根本瓶頸。即使知道 ID 存在，也必須從頭遍歷才能找到目標，導致效能隨資料量線性下降。
+
+### 3.3 Sum 操作分析 (圖三)
+
+- **效能表現：** 三種結構的效能曲線非常接近，均呈現斜率約為 1 的直線，符合 **O(n)** 的時間複雜度。
+- **原因分析：** 計算所有分數的總和，三種結構都無法避免地需要遍歷所有 `n` 個實際儲存的節點。由於基礎操作和複雜度相同，且加總是非常快的 CPU 運算，因此它們的效能表現非常接近。
+
+---
+
+## 4. 額外實驗：密集 ID 分布
+
+### 4.1 實驗動機
+
+標準實驗採用的是在 `[1, 2^20]` 區間內均勻分布的隨機 ID。本額外實驗旨在探討，當 ID 分布呈現高度**密集和局部性** (例如，所有 ID 均集中在 `[2^10, 2^11]` 這個狹小區間內) 時，三種資料結構的效能會產生何種變化。
+
+### 4.2 實驗圖表
+
+[](./dense_insert_performance.png)
+[](./dense_search_performance.png)
+[](./dense_sum_performance.png)
+
+### 4.2 實驗結果與分析
+
+- **`d_array` (預期變化最大):**
+    - **分析：** 在密集且連續的 ID 分布下，新的 ID 通常會大於所有已存在的 ID，因此 `insert` 操作大多是在陣列的**末端**進行，無需移動大量元素。這使得單次 `insert` 的成本從 O(n) 降至攤銷後的 O(1)。因此，總體 `insert` 效能預期會從 O(n²) **大幅優化至接近 O(n)**。
+    - **結論：** `d_array` 的效能對 ID 的分布模式高度敏感。
+
+- **`s_array` (預期變化較小):**
+    - **分析：** `insert` 的主要成本在於遍歷「已使用節點」的鏈結串列。雖然 ID 變得密集，但依然需要在這個串列中找到正確的插入位置，其 O(n) 的遍歷成本基本不變。不過，ID 密集可能使得節點在主陣列中的物理位置也相對集中，有機會**稍微改善 CPU 的快取效能**，使效能曲線比均勻分布時更平滑一些，但總體複雜度預期維持在 O(n²)。`search` 的 O(1) 效能則完全不受影響。
+    - **結論：** `s_array` 的效能對 ID 分布模式不敏感。
+
+- **`llpp` (預期幾乎無變化):**
+    - **分析：** `llpp` 的排序規則是基於**節點的記憶體位址**，這與 ID 的值本身完全無關。無論 ID 如何分布，`insert` 和 `search` 都需要遍歷串列。因此，其 O(n²) 和 O(n) 的效能表現預期不會有任何改變。
+    - **結論：** `llpp` 的效能與 ID 分布模式無關。
+
+---
+
+## 5. (Bonus) 與 AI 協作經驗
+
+這是我和gemini cli 的協作記錄
+
+-   **優點：**
+    -   快速分析數據：AI 能夠在我對數據感到困惑時，迅速結合理論複雜度與實驗數據，給出清晰的解釋（例如，解釋 d_array 的 insert 為何是 O(n²)）。
+    -   gemini cli可以自行看當前資料夾下的程式碼，不用我手動複製。
+    -   深入挖掘原因：AI 協助我理解了 s_array 效能曲線不穩定的深層原因，指出了 CPU 快取失誤這一關鍵的硬體因素。
+    -   節省時間：AI 根據我們的對話，快速生成了結構完整、內容充實的 README 和報告草稿，極大提升了報告撰寫效率。
+-   **缺點：**
+    -   需要精確指令：需要清晰地描述問題，AI 才能給出最有效的回答。
+
+```
 > src/d_array.cpp中，題目要求是要實作初始長度為1，每當空間不夠時就會擴張10倍的結構。我已經完成了這部分，不過我想
   把儲存方式從index=id的方式改成用id排序，並用binery search實現插入與搜尋。請基於我原本的架構做修改。
 
@@ -1099,3 +1370,4 @@
 
 
   這會讓你的估計和分析看起來更嚴謹、更專業。所以，就用 2.4 倍吧。
+```
