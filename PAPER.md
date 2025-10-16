@@ -4,6 +4,8 @@
 
 **學號：** 113703052
 
+[GitHub網址](https://github.com/Jedpoet/StructHW01)
+
 ---
 
 ## 1. 效能分析圖表
