@@ -238,9 +238,9 @@ std::vector<int> linked_listpp::search(long long id) {
 
 ### 4.2 實驗圖表
 
-[](./dense_insert_performance.png)
-[](./dense_search_performance.png)
-[](./dense_sum_performance.png)
+![圖四：執行 n 次 Insert 操作所需時間](./dense_insert_performance.png)
+![圖五：執行十萬次 Search 操作所需時間](./dense_search_performance.png)
+![圖六：計算所有 Score 總和所需時間](./dense_sum_performance.png)
 
 ### 4.2 實驗結果與分析
 
