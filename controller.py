@@ -1,79 +1,94 @@
 import subprocess
 import time
 import sys
+import os
 from pathlib import Path
 
 # --- 設定 ---
 MAX_RUNTIME = 600  # 10 分鐘 = 600 秒
 C_PLUS_PLUS_EXECUTABLE = Path("./build/StructHW01.exe")
 
+# 定義實驗類型
+EXPERIMENTS = {
+    "uniform": "result.log",
+    "dense": "result1.log"
+}
 
-def run_struct(STRUCT_TYPE, LOG):
-    arguments = [str(STRUCT_TYPE), str(LOG)]
+STRUCTURE_TYPES = range(1, 4)
+K_VALUES = range(11, 26)
+REPETITIONS = 10
 
+def run_single_test(struct_type, k_value, exp_type):
+    """執行單次 C++ 測試"""
+    arguments = [str(struct_type), str(k_value), exp_type]
     command_list = [C_PLUS_PLUS_EXECUTABLE.as_posix()] + arguments
 
-    print(f"將執行的指令: {' '.join(command_list)}")
-    print(f"最大運行時間設定為: {MAX_RUNTIME} 秒 (10 分鐘)")
+    print(f"-- Executing: {' '.join(command_list)}")
 
     start_time = time.time()
     try:
-        # 使用 subprocess.run 執行外部程式
-        # timeout 參數是關鍵，它會在大於指定時間後發出 SIGTERM 訊號終止程式
         result = subprocess.run(
-            command_list,  # 捕獲 C++ 程式的標準輸出和錯誤輸出
-            capture_output=True,  # 以文本模式處理輸出
-            text=True,  # 設定超時時間
+            command_list,
+            capture_output=True,
+            text=True,
             timeout=MAX_RUNTIME,
+            check=False  # Don't raise exception for non-zero exit codes
         )
 
-        end_time = time.time()
-
-        # 程式在時限內結束
-        print("-" * 30)
-        print("程式在時限內完成。")
-        print(f"實際運行時間: {end_time - start_time:.2f} 秒")
-        print("-" * 30)
-
-        # 輸出 C++ 程式的結果 (例如您計算的 Checksum)
-        print("C++ 輸出：")
-        print(result.stdout)
-        return 1
+        if result.returncode != 0:
+            print(f"  -> C++ program exited with error code {result.returncode}.")
+            print(f"  -> Stderr: {result.stderr.strip()}")
 
     except subprocess.TimeoutExpired:
-        # 程式被 Python 強制停止
-        end_time = time.time()
-        print("-" * 30)
-        print(f"\n警告：程式已運行超過 {MAX_RUNTIME} 秒！")
-        print("Python 已強制停止 C++ 程式。")
-        print(f"程式運行時間約為: {end_time - start_time:.2f} 秒")
-        print("-" * 30)
-        return -1
-
+        print(f"  -> WARNING: Timeout after {MAX_RUNTIME} seconds.")
+        return -1  # Return -1 to indicate timeout
     except FileNotFoundError:
-        print(
-            f"\n錯誤：找不到可執行檔 '{C_PLUS_PLUS_EXECUTABLE}'。請確認路徑和檔案名稱是否正確。"
-        )
+        print(f"\nERROR: Executable not found at '{C_PLUS_PLUS_EXECUTABLE}'. Please compile it first.")
         sys.exit(1)
-
     except Exception as e:
-        print(f"\n發生未知錯誤: {e}")
+        print(f"\nAn unexpected error occurred: {e}")
+        return -2 # Return -2 for other errors
 
+    return 1 # Success
 
 if __name__ == "__main__":
-    for stype in range(1, 4):
-        timeout_occurred = False  # 為每個資料結構重設超時旗標
-        print(f"\n{'=' * 20} 開始測試資料結構 {stype} {'=' * 20}")
-        for slog in range(11, 26):
-            if timeout_occurred:
-                print(f"由於先前在 n=2^{slog - 1} 時已超時，跳過所有後續的 n 值測試。")
-                break  # 跳出 slog 迴圈，直接測試下一個資料結構
+    # 遍歷兩種實驗
+    for exp_type, log_file in EXPERIMENTS.items():
+        print(f"\n{'=' * 25} STARTING EXPERIMENT: {exp_type.upper()} {'=' * 25}")
+        print(f"Output will be logged to: {log_file}")
 
-            for t in range(10):
-                run_result = run_struct(stype, slog)
-                if run_result == -1:  # -1 代表超時
-                    print(
-                        f"結構 {stype} 在 n=2^{slog} 時超時，將跳過此結構後續的所有測試。"
-                    )
-                    timeout_occurred = True  # 設定旗標
-                    break  # 跳出 t 迴圈
+        # 在實驗開始前，清空對應的 log 檔案
+        if os.path.exists(log_file):
+            os.remove(log_file)
+            print(f"Cleared old log file: {log_file}")
+
+        # 遍歷三種資料結構
+        for stype in STRUCTURE_TYPES:
+            timeout_occurred = False
+            print(f"\n{'-' * 20} Testing Structure Type: {stype} {'-' * 20}")
+
+            # 遍歷 k 值 (n = 2^k)
+            for k in K_VALUES:
+                if timeout_occurred:
+                    print(f"  -> Skipping k={k} and subsequent values due to previous timeout.")
+                    continue
+
+                print(f"  Running tests for k={k} (n=2^{k})")
+                # 重複執行 10 次
+                for i in range(REPETITIONS):
+                    print(f"    Repetition {i+1}/{REPETITIONS}...")
+                    run_result = run_single_test(stype, k, exp_type)
+
+                    if run_result == -1:  # Timeout
+                        print(f"  -> Timeout occurred for structure {stype} at k={k}.")
+                        timeout_occurred = True
+                        break  # Break from repetitions loop
+                    elif run_result == -2: # Other error
+                        print("  -> Halting tests for this structure due to an unexpected error.")
+                        timeout_occurred = True # Treat as fatal for this structure
+                        break
+
+                if timeout_occurred:
+                    break # Break from k_values loop
+
+    print("\nAll experiments finished.")
